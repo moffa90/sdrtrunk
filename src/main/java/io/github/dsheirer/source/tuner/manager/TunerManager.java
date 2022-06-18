@@ -19,6 +19,9 @@
 
 package io.github.dsheirer.source.tuner.manager;
 
+import com.github.dsheirer.sdrplay.DeviceSelectionMode;
+import com.github.dsheirer.sdrplay.SDRplay;
+import com.github.dsheirer.sdrplay.device.DeviceType;
 import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.preference.source.ChannelizerType;
 import io.github.dsheirer.source.Source;
@@ -36,6 +39,7 @@ import io.github.dsheirer.source.tuner.channel.TunerChannelSource;
 import io.github.dsheirer.source.tuner.configuration.TunerConfiguration;
 import io.github.dsheirer.source.tuner.configuration.TunerConfigurationManager;
 import io.github.dsheirer.source.tuner.recording.RecordingTunerConfiguration;
+import io.github.dsheirer.source.tuner.sdrplay.DiscoveredRspTuner;
 import io.github.dsheirer.source.tuner.ui.DiscoveredTunerModel;
 import io.github.dsheirer.util.ThreadPool;
 import java.nio.ByteBuffer;
@@ -70,6 +74,7 @@ public class TunerManager implements IDiscoveredTunerStatusListener
     private TunerConfigurationManager mTunerConfigurationManager;
     private HotplugEventSupport mHotplugEventSupport = new HotplugEventSupport();
     private Context mLibUsbApplicationContext = new Context();
+    private SDRplay mSdrplayApi;
     private boolean mLibUsbInitialized = false;
 
     /**
@@ -287,7 +292,28 @@ public class TunerManager implements IDiscoveredTunerStatusListener
      */
     private void discoverSdrPlayTuners()
     {
-        //placeholder ...
+        SDRplay sdrplayApi = getSdrplayApi();
+
+        if(sdrplayApi.isAvailable())
+        {
+            List<com.github.dsheirer.sdrplay.DeviceDescriptor> deviceDescriptors = sdrplayApi.getDevices();
+
+            for(com.github.dsheirer.sdrplay.DeviceDescriptor deviceDescriptor: deviceDescriptors)
+            {
+                //Configure RSPduo to user preference - either single (wide) tuner or dual (narrow) tuners
+                if(deviceDescriptor.getDeviceType() == DeviceType.RSPduo)
+                {
+
+                }
+                else
+                {
+                    mDiscoveredTunerModel.addDiscoveredTuner(new DiscoveredRspTuner(mSdrplayApi, deviceDescriptor));
+                }
+                List<DeviceSelectionMode> deviceSelectionModes = deviceDescriptor.getDeviceSelectionModes();
+
+                mLog.info("SDRPlay Device [" + deviceDescriptor.getDeviceType() +"] Selectable As: " + deviceSelectionModes);
+            }
+        }
     }
 
     /**
@@ -315,6 +341,16 @@ public class TunerManager implements IDiscoveredTunerStatusListener
                 mDiscoveredTunerModel.addDiscoveredTuner(discoveredRecordingTuner);
             }
         }
+    }
+
+    private SDRplay getSdrplayApi()
+    {
+        if(mSdrplayApi == null)
+        {
+            mSdrplayApi = new SDRplay();
+        }
+
+        return mSdrplayApi;
     }
 
     /**
