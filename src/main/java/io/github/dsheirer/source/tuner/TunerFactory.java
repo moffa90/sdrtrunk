@@ -53,6 +53,14 @@ import io.github.dsheirer.source.tuner.rtl.e4k.E4KTunerEditor;
 import io.github.dsheirer.source.tuner.rtl.r820t.R820TEmbeddedTuner;
 import io.github.dsheirer.source.tuner.rtl.r820t.R820TTunerConfiguration;
 import io.github.dsheirer.source.tuner.rtl.r820t.R820TTunerEditor;
+import io.github.dsheirer.source.tuner.sdrplay.DiscoveredRspTuner;
+import io.github.dsheirer.source.tuner.sdrplay.Rsp1TunerConfiguration;
+import io.github.dsheirer.source.tuner.sdrplay.Rsp1aTunerConfiguration;
+import io.github.dsheirer.source.tuner.sdrplay.Rsp1aTunerEditor;
+import io.github.dsheirer.source.tuner.sdrplay.Rsp2TunerConfiguration;
+import io.github.dsheirer.source.tuner.sdrplay.RspDuoTuner1Configuration;
+import io.github.dsheirer.source.tuner.sdrplay.RspDuoTuner2Configuration;
+import io.github.dsheirer.source.tuner.sdrplay.RspDxTunerConfiguration;
 import io.github.dsheirer.source.tuner.ui.TunerEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,6 +156,18 @@ public class TunerFactory
                 return new R820TTunerConfiguration(uniqueID);
             case RECORDING:
                 return RecordingTunerConfiguration.create();
+            case RSP_1:
+                return new Rsp1TunerConfiguration(uniqueID);
+            case RSP_1A:
+                return new Rsp1aTunerConfiguration(uniqueID);
+            case RSP_2:
+                return new Rsp2TunerConfiguration(uniqueID);
+            case RSP_DUO_1:
+                return new RspDuoTuner1Configuration(uniqueID);
+            case RSP_DUO_2:
+                return new RspDuoTuner2Configuration(uniqueID);
+            case RSP_DX:
+                return new RspDxTunerConfiguration(uniqueID);
             default:
                 throw new IllegalArgumentException("Unrecognized tuner type [" + type.name() + "]");
         }
@@ -169,6 +189,29 @@ public class TunerFactory
                 return new FCD2TunerEditor(userPreferences, tunerManager, discoveredTuner);
             case HACKRF:
                 return new HackRFTunerEditor(userPreferences, tunerManager, discoveredTuner);
+            case RSP:
+                if(discoveredTuner instanceof DiscoveredRspTuner discoveredRspTuner)
+                {
+                    switch(discoveredRspTuner.getDeviceType())
+                    {
+                        case RSP1:
+                            //Device not supported by 3.x API ??
+                            break;
+                        case RSP1A:
+                            return new Rsp1aTunerEditor(userPreferences, tunerManager, discoveredRspTuner);
+                        case RSP2:
+                            break;
+                        case RSPduo:
+                            break;
+                        case RSPdx:
+                            break;
+                        case UNKNOWN:
+                            throw new IllegalArgumentException("Unrecognized RSP device type: " + discoveredRspTuner.getDeviceType());
+                    }
+                }
+                throw new IllegalArgumentException("Unrecognized discovered RSP tuner class: " + discoveredTuner.getClass());
+            case RECORDING_TUNER:
+                return new RecordingTunerEditor(userPreferences, tunerManager, discoveredTuner);
             case RTL2832:
                 if(discoveredTuner.hasTuner())
                 {
@@ -181,8 +224,6 @@ public class TunerFactory
                     }
                 }
                 return new RTL2832UnknownTunerEditor(userPreferences, tunerManager, discoveredTuner);
-            case RECORDING_TUNER:
-                return new RecordingTunerEditor(userPreferences, tunerManager, discoveredTuner);
             case TEST_TUNER:
             case UNKNOWN:
             default:

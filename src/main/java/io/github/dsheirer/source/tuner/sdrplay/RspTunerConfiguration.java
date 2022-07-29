@@ -39,8 +39,20 @@ public abstract class RspTunerConfiguration extends TunerConfiguration
 {
     private int mDecimation = 1;
 
+    /**
+     * JAXB Constructor
+     */
     public RspTunerConfiguration()
     {
+    }
+
+    /**
+     * Constructs an instance with the specified unique id
+     * @param uniqueId for the tuner
+     */
+    public RspTunerConfiguration(String uniqueId)
+    {
+        super(uniqueId);
     }
 
     /**

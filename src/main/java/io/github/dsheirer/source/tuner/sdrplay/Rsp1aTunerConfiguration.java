@@ -30,6 +30,22 @@ public class Rsp1aTunerConfiguration extends RspTunerConfiguration
     private boolean mRfDabNotch;
     private boolean mBiasT;
 
+    /**
+     * Constructs an instance
+     * @param uniqueId for the tuner
+     */
+    public Rsp1aTunerConfiguration(String uniqueId)
+    {
+        super(uniqueId);
+    }
+
+    /**
+     * JAXB constructor
+     */
+    public Rsp1aTunerConfiguration()
+    {
+    }
+
     @Override
     public TunerType getTunerType()
     {

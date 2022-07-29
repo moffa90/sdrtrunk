@@ -19,23 +19,70 @@
 
 package io.github.dsheirer.source.tuner.sdrplay;
 
+import com.github.dsheirer.sdrplay.SDRplayException;
 import com.github.dsheirer.sdrplay.device.Device;
+import io.github.dsheirer.source.SourceException;
 import io.github.dsheirer.source.tuner.ITunerErrorListener;
 import io.github.dsheirer.source.tuner.TunerController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract RSP tuner controller
  */
-public abstract class RspTunerController extends TunerController
+public abstract class RspTunerController<T extends Device> extends TunerController
 {
+    private static final Logger mLog = LoggerFactory.getLogger(RspTunerController.class);
+    private T mDevice;
+
     /**
      * Abstract tuner controller class.  The tuner controller manages frequency bandwidth and currently tuned channels
      * that are being fed samples from the tuner.
      *
+     * @param device that is the RSP tuner
      * @param tunerErrorListener to monitor errors produced from this tuner controller
      */
-    public RspTunerController(Device device, ITunerErrorListener tunerErrorListener)
+    public RspTunerController(T device, ITunerErrorListener tunerErrorListener)
     {
         super(tunerErrorListener);
+        mDevice = device;
+    }
+
+    /**
+     * The RSP tuner device for this controller
+     */
+    protected T getDevice()
+    {
+        return mDevice;
+    }
+
+    /**
+     * Starts this RSP tuner and attempts to claim the device via the API
+     * @throws SourceException
+     */
+    @Override
+    public void start() throws SourceException
+    {
+        try
+        {
+            getDevice().select();
+        }
+        catch(SDRplayException se)
+        {
+            throw new SourceException("Unable to select tuner - in use");
+        }
+    }
+
+    @Override
+    public void stop()
+    {
+        try
+        {
+            getDevice().release();
+        }
+        catch(SDRplayException se)
+        {
+            mLog.error("Error releasing RSP tuner device", se);
+        }
     }
 }

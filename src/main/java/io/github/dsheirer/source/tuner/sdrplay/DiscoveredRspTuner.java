@@ -21,6 +21,7 @@ package io.github.dsheirer.source.tuner.sdrplay;
 
 import com.github.dsheirer.sdrplay.DeviceDescriptor;
 import com.github.dsheirer.sdrplay.SDRplay;
+import com.github.dsheirer.sdrplay.device.DeviceType;
 import io.github.dsheirer.source.tuner.TunerClass;
 import io.github.dsheirer.source.tuner.manager.DiscoveredTuner;
 
@@ -47,6 +48,14 @@ public class DiscoveredRspTuner extends DiscoveredTuner
     public TunerClass getTunerClass()
     {
         return TunerClass.RSP;
+    }
+
+    /**
+     * Type of RSP tuner device
+     */
+    public DeviceType getDeviceType()
+    {
+        return mDeviceDescriptor.getDeviceType();
     }
 
     @Override

@@ -32,6 +32,23 @@ public class RspDuoTuner2Configuration extends RspTunerConfiguration
     private boolean mExternalReferenceOutput;
     private boolean mBiasT;
 
+    /**
+     * Constructs an instance
+     * @param uniqueId for the tuner
+     */
+    public RspDuoTuner2Configuration(String uniqueId)
+    {
+        super(uniqueId);
+    }
+
+    /**
+     * JAXB constructor
+     */
+    public RspDuoTuner2Configuration()
+    {
+    }
+
+
     @Override
     public TunerType getTunerType()
     {

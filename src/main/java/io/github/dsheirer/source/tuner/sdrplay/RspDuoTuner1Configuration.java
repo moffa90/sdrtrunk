@@ -34,6 +34,22 @@ public class RspDuoTuner1Configuration extends RspTunerConfiguration
     private boolean mAmNotch;
     private RspDuoAmPort mAmPort;
 
+    /**
+     * Constructs an instance
+     * @param uniqueId for the tuner
+     */
+    public RspDuoTuner1Configuration(String uniqueId)
+    {
+        super(uniqueId);
+    }
+
+    /**
+     * JAXB constructor
+     */
+    public RspDuoTuner1Configuration()
+    {
+    }
+
     @Override
     public TunerType getTunerType()
     {

@@ -19,32 +19,37 @@
 
 package io.github.dsheirer.source.tuner.sdrplay;
 
-import io.github.dsheirer.source.tuner.TunerType;
-
 /**
- * RSP1 tuner configuration
+ * Decimation rates supported by the RSP tuner series.
  */
-public class Rsp1TunerConfiguration extends RspTunerConfiguration
+public enum Decimation
 {
-    /**
-     * Constructs an instance
-      * @param uniqueId for the tuner
-     */
-    public Rsp1TunerConfiguration(String uniqueId)
+    D1(1),
+    D2(2),
+    D4(4),
+    D8(8);
+
+    private int mRate;
+
+    Decimation(int rate)
     {
-        super(uniqueId);
+        mRate = rate;
     }
 
     /**
-     * JAXB constructor
+     * Decimation rate
      */
-    public Rsp1TunerConfiguration()
+    public int getRate()
     {
+        return mRate;
     }
 
+    /**
+     * Overrides the default string representation
+     */
     @Override
-    public TunerType getTunerType()
+    public String toString()
     {
-        return TunerType.RSP_1;
+        return String.valueOf(getRate());
     }
 }

@@ -36,6 +36,22 @@ public class RspDxTunerConfiguration extends RspTunerConfiguration
     private RspDxAntenna mAntenna;
     private HdrModeBandwidth mHdrModeBandwidth;
 
+    /**
+     * Constructs an instance
+     * @param uniqueId for the tuner
+     */
+    public RspDxTunerConfiguration(String uniqueId)
+    {
+        super(uniqueId);
+    }
+
+    /**
+     * JAXB constructor
+     */
+    public RspDxTunerConfiguration()
+    {
+    }
+
 
     @Override
     public TunerType getTunerType()

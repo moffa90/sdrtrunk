@@ -35,6 +35,22 @@ public class Rsp2TunerConfiguration extends RspTunerConfiguration
     private Rsp2AmPort mAmPort;
     private Rsp2Antenna mAntenna;
 
+    /**
+     * Constructs an instance
+     * @param uniqueId for the tuner
+     */
+    public Rsp2TunerConfiguration(String uniqueId)
+    {
+        super(uniqueId);
+    }
+
+    /**
+     * JAXB constructor
+     */
+    public Rsp2TunerConfiguration()
+    {
+    }
+
     @Override
     public TunerType getTunerType()
     {
