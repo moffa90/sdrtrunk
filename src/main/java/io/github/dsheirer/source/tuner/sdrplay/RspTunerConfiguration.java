@@ -22,6 +22,7 @@ package io.github.dsheirer.source.tuner.sdrplay;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.github.dsheirer.sdrplay.parameter.tuner.SampleRate;
 import io.github.dsheirer.source.tuner.configuration.TunerConfiguration;
 
 /**
@@ -37,7 +38,7 @@ import io.github.dsheirer.source.tuner.configuration.TunerConfiguration;
 })
 public abstract class RspTunerConfiguration extends TunerConfiguration
 {
-    private int mDecimation = 1;
+    private SampleRate mSampleRate = SampleRate.RATE_10_000;
 
     /**
      * JAXB Constructor
@@ -56,19 +57,19 @@ public abstract class RspTunerConfiguration extends TunerConfiguration
     }
 
     /**
-     * Sample rate decimation setting (1, 2, 4, or 8).
+     * Sample rate for the tuner
      */
-    @JacksonXmlProperty(isAttribute = true, localName = "decimation")
-    public int getDecimation()
+    @JacksonXmlProperty(isAttribute = true, localName = "sampleRate")
+    public SampleRate getSampleRate()
     {
-        return mDecimation;
+        return mSampleRate;
     }
 
     /**
-     * Sets the sample rate decimation setting.
+     * Sets the sample rate for the tuner
      */
-    public void setDecimation(int decimation)
+    public void setSampleRate(SampleRate sampleRate)
     {
-        mDecimation = decimation;
+        mSampleRate = sampleRate;
     }
 }

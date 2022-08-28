@@ -50,6 +50,6 @@ public enum Decimation
     @Override
     public String toString()
     {
-        return String.valueOf(getRate());
+        return getRate() + "x";
     }
 }

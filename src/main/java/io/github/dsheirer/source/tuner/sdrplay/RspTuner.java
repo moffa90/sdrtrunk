@@ -19,24 +19,25 @@
 
 package io.github.dsheirer.source.tuner.sdrplay;
 
+import io.github.dsheirer.preference.source.ChannelizerType;
 import io.github.dsheirer.source.tuner.ITunerErrorListener;
 import io.github.dsheirer.source.tuner.Tuner;
 import io.github.dsheirer.source.tuner.TunerClass;
-import io.github.dsheirer.source.tuner.TunerController;
 
 /**
- * Abstract RSP tuner
+ * Generic RSP tuner with a device specific tuner controller implementation.
  */
 public class RspTuner extends Tuner
 {
     /**
      * Constructs an instance
-     * @param tunerController
-     * @param tunerErrorListener
+     * @param tunerController for controlling the tuner
+     * @param tunerErrorListener to process errors from this tuner
+     * @param channelizerType to use with this tuner
      */
-    public RspTuner(TunerController tunerController, ITunerErrorListener tunerErrorListener)
+    public RspTuner(RspTunerController tunerController, ITunerErrorListener tunerErrorListener, ChannelizerType channelizerType)
     {
-        super(tunerController, tunerErrorListener);
+        super(tunerController, tunerErrorListener, channelizerType);
     }
 
     @Override

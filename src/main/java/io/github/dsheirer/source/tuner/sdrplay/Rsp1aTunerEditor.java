@@ -19,10 +19,16 @@
 
 package io.github.dsheirer.source.tuner.sdrplay;
 
+import com.github.dsheirer.sdrplay.SDRplayException;
+import com.github.dsheirer.sdrplay.parameter.tuner.SampleRate;
 import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.source.tuner.manager.TunerManager;
 import net.miginfocom.swing.MigLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
 import javax.swing.SpinnerNumberModel;
@@ -30,8 +36,15 @@ import javax.swing.SpinnerNumberModel;
 /**
  * RSP1A Tuner Editor
  */
-public class Rsp1aTunerEditor extends RspTunerEditor
+public class Rsp1aTunerEditor extends RspTunerEditor<Rsp1aTunerConfiguration>
 {
+    private Logger mLog = LoggerFactory.getLogger(Rsp1aTunerEditor.class);
+
+    private JComboBox<SampleRate> mSampleRateCombo;
+    private JCheckBox mBiasTCheckBox;
+    private JCheckBox mRfDabNotchCheckBox;
+    private JCheckBox mRfNotchCheckBox;
+
     /**
      * Constructs an instance
      * @param userPreferences for settings
@@ -64,26 +77,35 @@ public class Rsp1aTunerEditor extends RspTunerEditor
         add(new JLabel("Frequency (MHz):"));
         add(getFrequencyPanel(), "wrap");
 
-//        add(new JLabel("Sample Rate:"));
-//        add(getSampleRateCombo(), "wrap");
+        add(new JLabel("Sample Rate:"));
+        add(getSampleRateCombo(), "wrap");
 
         add(new JSeparator(), "span,growx,push");
 
-        add(new JLabel("Decimation"));
-        add(getDecimationCombo(), "wrap");
-//        add(new JLabel("Gain Control"));
-//        add(getAmplifierToggle(), "wrap");
-//
-//        add(new JLabel("LNA:"));
-//        add(getLnaGainCombo(), "wrap");
-//
-//        add(new JLabel("VGA:"));
-//        add(getVgaGainCombo(), "wrap");
+        add(new JLabel());
+        add(getBiasTCheckBox(), "wrap");
+        add(new JLabel());
+        add(getRfNotchCheckBox(), "wrap");
+        add(new JLabel());
+        add(getRfDabNotchCheckBox(), "wrap");
     }
 
     private DiscoveredRspTuner getDiscoveredRspTuner()
     {
         return (DiscoveredRspTuner)getDiscoveredTuner();
+    }
+
+    /**
+     * Access tuner controller
+     */
+    private Rsp1aTunerController getTunerController()
+    {
+        if(hasTuner())
+        {
+            return (Rsp1aTunerController)getTuner().getTunerController();
+        }
+
+        return null;
     }
 
     @Override
@@ -102,22 +124,37 @@ public class Rsp1aTunerEditor extends RspTunerEditor
         getButtonPanel().updateControls();
         getFrequencyPanel().updateControls();
 
-        getDecimationCombo().setEnabled(hasTuner());
+        getSampleRateCombo().setEnabled(hasTuner() && !getTuner().getTunerController().isLocked());
+        getSampleRateCombo().setSelectedItem(getTunerController().getSampleRateEnumeration());
 
-//        getSampleRateCombo().setEnabled(hasTuner() && !getTuner().getTunerController().isLocked());
-//        updateSampleRateToolTip();
-//        getTunerInfoButton().setEnabled(hasTuner());
-
-//        getAmplifierToggle().setEnabled(hasTuner());
-//        getLnaGainCombo().setEnabled(hasTuner());
-//        getVgaGainCombo().setEnabled(hasTuner());
-
-        if(hasConfiguration())
+        getBiasTCheckBox().setEnabled(hasTuner());
+        try
         {
-//            getSampleRateCombo().setSelectedItem(getConfiguration().getSampleRate());
-//            getAmplifierToggle().setSelected(getConfiguration().getAmplifierEnabled());
-//            getLnaGainCombo().setSelectedItem(getConfiguration().getLNAGain());
-//            getVgaGainCombo().setSelectedItem(getConfiguration().getVGAGain());
+            getBiasTCheckBox().setSelected(getTunerController().isBiasT());
+        }
+        catch(SDRplayException se)
+        {
+            mLog.error("Error setting Bias-T enabled state in editor");
+        }
+
+        getRfDabNotchCheckBox().setEnabled(hasTuner());
+        try
+        {
+            getRfDabNotchCheckBox().setSelected(getTunerController().isRfDabNotch());
+        }
+        catch(SDRplayException se)
+        {
+            mLog.error("Error setting RF DAB Notch enabled state in editor");
+        }
+
+        getRfNotchCheckBox().setEnabled(hasTuner());
+        try
+        {
+            getRfNotchCheckBox().setSelected(getTunerController().isRfNotch());
+        }
+        catch(SDRplayException se)
+        {
+            mLog.error("Error setting RF Notch enabled state in editor");
         }
 
         setLoading(false);
@@ -132,15 +169,127 @@ public class Rsp1aTunerEditor extends RspTunerEditor
             double value = ((SpinnerNumberModel) getFrequencyCorrectionSpinner().getModel()).getNumber().doubleValue();
             getConfiguration().setFrequencyCorrection(value);
             getConfiguration().setAutoPPMCorrectionEnabled(getAutoPPMCheckBox().isSelected());
+            getConfiguration().setSampleRate((SampleRate)getSampleRateCombo().getSelectedItem());
+            getConfiguration().setBiasT(getBiasTCheckBox().isSelected());
+            getConfiguration().setRfNotch(getRfNotchCheckBox().isSelected());
+            getConfiguration().setRfDabNotch(getRfDabNotchCheckBox().isSelected());
 
-            getConfiguration().setDecimation(getDecimationRate().getRate());
-
-
-//            getConfiguration().setSampleRate((HackRFTunerController.HackRFSampleRate)getSampleRateCombo().getSelectedItem());
-//            getConfiguration().setAmplifierEnabled(getAmplifierToggle().isSelected());
-//            getConfiguration().setLNAGain((HackRFTunerController.HackRFLNAGain)getLnaGainCombo().getSelectedItem());
-//            getConfiguration().setVGAGain((HackRFTunerController.HackRFVGAGain)getVgaGainCombo().getSelectedItem());
             saveConfiguration();
         }
     }
+
+    /**
+     * Sample rate selection combobox control
+     */
+    private JComboBox<SampleRate> getSampleRateCombo()
+    {
+        if(mSampleRateCombo == null)
+        {
+            SampleRate[] sampleRates = SampleRate.VALID_VALUES.toArray(new SampleRate[SampleRate.VALID_VALUES.size()]);
+            mSampleRateCombo = new JComboBox<>(sampleRates);
+            mSampleRateCombo.setEnabled(false);
+            mSampleRateCombo.addActionListener(e -> {
+                if(hasTuner() && !isLoading())
+                {
+                    SampleRate selected = (SampleRate)mSampleRateCombo.getSelectedItem();
+
+                    try
+                    {
+                        getTunerController().setSampleRate(selected);
+                    }
+                    catch(SDRplayException se)
+                    {
+                        mLog.error("Error setting sample rate for RSP1A tuner", se);
+                    }
+                }
+            });
+        }
+
+        return mSampleRateCombo;
+    }
+
+    /**
+     * Checkbox control for Bias-T
+     */
+    private JCheckBox getBiasTCheckBox()
+    {
+        if(mBiasTCheckBox == null)
+        {
+            mBiasTCheckBox = new JCheckBox("Bias-T");
+            mBiasTCheckBox.setEnabled(false);
+            mBiasTCheckBox.addActionListener(e -> {
+                if(hasTuner() && !isLoading())
+                {
+                    try
+                    {
+                        getTunerController().setBiasT(mBiasTCheckBox.isSelected());
+                        save();
+                    }
+                    catch(SDRplayException se)
+                    {
+                        mLog.error("Unable to set RSP1A Bias-T enabled to " + mBiasTCheckBox.isSelected(), se);
+                    }
+                }
+            });
+        }
+
+        return mBiasTCheckBox;
+    }
+
+    /**
+     * Checkbox control for RF DAB notch
+     */
+    private JCheckBox getRfDabNotchCheckBox()
+    {
+        if(mRfDabNotchCheckBox == null)
+        {
+            mRfDabNotchCheckBox = new JCheckBox("RF DAB Notch");
+            mRfDabNotchCheckBox.setEnabled(false);
+            mRfDabNotchCheckBox.addActionListener(e -> {
+                if(hasTuner() && !isLoading())
+                {
+                    try
+                    {
+                        getTunerController().setRfDabNotch(mRfDabNotchCheckBox.isSelected());
+                        save();
+                    }
+                    catch(SDRplayException se)
+                    {
+                        mLog.error("Unable to set RSP1A RF DAB notch enabled to " + mRfDabNotchCheckBox.isSelected(), se);
+                    }
+                }
+            });
+        }
+
+        return mRfDabNotchCheckBox;
+    }
+
+    /**
+     * Checkbox control for RF notch
+     */
+    private JCheckBox getRfNotchCheckBox()
+    {
+        if(mRfNotchCheckBox == null)
+        {
+            mRfNotchCheckBox = new JCheckBox("RF Notch");
+            mRfNotchCheckBox.setEnabled(false);
+            mRfNotchCheckBox.addActionListener(e -> {
+                if(hasTuner() && !isLoading())
+                {
+                    try
+                    {
+                        getTunerController().setRfNotch(mRfNotchCheckBox.isSelected());
+                        save();
+                    }
+                    catch(SDRplayException se)
+                    {
+                        mLog.error("Unable to set RSP1A RF notch enabled to " + mRfNotchCheckBox.isSelected(), se);
+                    }
+                }
+            });
+        }
+
+        return mRfNotchCheckBox;
+    }
+
 }

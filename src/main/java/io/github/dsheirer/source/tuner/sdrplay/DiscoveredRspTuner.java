@@ -20,8 +20,13 @@
 package io.github.dsheirer.source.tuner.sdrplay;
 
 import com.github.dsheirer.sdrplay.DeviceDescriptor;
+import com.github.dsheirer.sdrplay.DeviceSelectionMode;
 import com.github.dsheirer.sdrplay.SDRplay;
+import com.github.dsheirer.sdrplay.SDRplayException;
+import com.github.dsheirer.sdrplay.device.Device;
 import com.github.dsheirer.sdrplay.device.DeviceType;
+import com.github.dsheirer.sdrplay.device.Rsp1aDevice;
+import io.github.dsheirer.preference.source.ChannelizerType;
 import io.github.dsheirer.source.tuner.TunerClass;
 import io.github.dsheirer.source.tuner.manager.DiscoveredTuner;
 
@@ -32,16 +37,19 @@ public class DiscoveredRspTuner extends DiscoveredTuner
 {
     private SDRplay mSDRplayApi;
     private DeviceDescriptor mDeviceDescriptor;
+    private ChannelizerType mChannelizerType;
 
     /**
      * Constructs an instance
-     * @param sdrplayApi
-     * @param deviceDescriptor
+     * @param sdrplayApi for controlling the RSP device
+     * @param deviceDescriptor of the RSP device
+     * @param channelizerType to use with this tuner
      */
-    public DiscoveredRspTuner(SDRplay sdrplayApi, DeviceDescriptor deviceDescriptor)
+    public DiscoveredRspTuner(SDRplay sdrplayApi, DeviceDescriptor deviceDescriptor, ChannelizerType channelizerType)
     {
         mSDRplayApi = sdrplayApi;
         mDeviceDescriptor = deviceDescriptor;
+        mChannelizerType = channelizerType;
     }
 
     @Override
@@ -67,6 +75,36 @@ public class DiscoveredRspTuner extends DiscoveredTuner
     @Override
     public void start()
     {
-        setErrorMessage("Not finished yet");
+        try
+        {
+            Device device = mSDRplayApi.select(mDeviceDescriptor, DeviceSelectionMode.SINGLE_TUNER_1);
+
+            switch(getDeviceType())
+            {
+                case RSP1:
+                    break;
+                case RSP1A:
+                    mTuner = new RspTuner(new Rsp1aTunerController((Rsp1aDevice)device, this),
+                            this, mChannelizerType);
+                    break;
+                case RSP2:
+                    break;
+                case RSPdx:
+                    break;
+                case UNKNOWN:
+                    setErrorMessage("Unrecognized RSP Device");
+                    break;
+            }
+        }
+        catch(SDRplayException se)
+        {
+            setErrorMessage("Unable to select RSP/" + getDeviceType() + " - may be in use by other application");
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return getDeviceType() + " ID:" + getId();
     }
 }

@@ -27,6 +27,7 @@ import io.github.dsheirer.source.tuner.TunerType;
  */
 public class Rsp1aTunerConfiguration extends RspTunerConfiguration
 {
+    private boolean mRfNotch;
     private boolean mRfDabNotch;
     private boolean mBiasT;
 
@@ -50,6 +51,24 @@ public class Rsp1aTunerConfiguration extends RspTunerConfiguration
     public TunerType getTunerType()
     {
         return TunerType.RSP_1A;
+    }
+
+    /**
+     * Indicates if the RF notch is enabled.
+     */
+    @JacksonXmlProperty(isAttribute = true, localName = "rf_notch")
+    public boolean isRfNotch()
+    {
+        return mRfNotch;
+    }
+
+    /**
+     * Sets the enabled state of the RF notch
+     * @param enabled
+     */
+    public void setRfNotch(boolean enabled)
+    {
+        mRfNotch = enabled;
     }
 
     /**

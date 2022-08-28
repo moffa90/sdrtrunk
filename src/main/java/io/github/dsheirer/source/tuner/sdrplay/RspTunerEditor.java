@@ -22,18 +22,12 @@ package io.github.dsheirer.source.tuner.sdrplay;
 import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.source.tuner.manager.TunerManager;
 import io.github.dsheirer.source.tuner.ui.TunerEditor;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JComboBox;
 
 /**
  * Abstract RSP tuner editor
  */
-public abstract class RspTunerEditor extends TunerEditor<RspTuner,RspTunerConfiguration>
+public abstract class RspTunerEditor<C extends RspTunerConfiguration> extends TunerEditor<RspTuner,C>
 {
-    private JComboBox<Decimation> mDecimationCombo;
-
     /**
      * Constructs an instance
      * @param userPreferences for preference settings
@@ -43,41 +37,5 @@ public abstract class RspTunerEditor extends TunerEditor<RspTuner,RspTunerConfig
     public RspTunerEditor(UserPreferences userPreferences, TunerManager tunerManager, DiscoveredRspTuner discoveredTuner)
     {
         super(userPreferences, tunerManager, discoveredTuner);
-    }
-
-    /**
-     * Decimation rates combo box
-     */
-    protected JComboBox<Decimation> getDecimationCombo()
-    {
-        if(mDecimationCombo == null)
-        {
-            mDecimationCombo = new JComboBox<>(Decimation.values());
-            mDecimationCombo.setToolTipText("<html>Sample Rate Decimation.</html>");
-            mDecimationCombo.setEnabled(false);
-            mDecimationCombo.addActionListener(new ActionListener()
-            {
-                @Override
-                public void actionPerformed(ActionEvent e)
-                {
-
-                }
-            });
-        }
-
-        return mDecimationCombo;
-    }
-
-    /**
-     * Convenience method to always get the decimation rate from the combobox.
-     */
-    protected Decimation getDecimationRate()
-    {
-        if(getDecimationCombo().getSelectedItem() != null)
-        {
-            return (Decimation)getDecimationCombo().getSelectedItem();
-        }
-
-        return Decimation.D1;
     }
 }

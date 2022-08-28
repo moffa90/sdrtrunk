@@ -243,37 +243,7 @@ public class TunerManager implements IDiscoveredTunerStatusListener
     {
         if(!mDiscoveredTunerModel.hasUsbTuner(discoveredUSBTuner.getBus(), discoveredUSBTuner.getPortAddress()))
         {
-            discoveredUSBTuner.addTunerStatusListener(this);
-
-            //Set the tuner to disabled if the user has previously blacklisted the tuner
-            if(mTunerConfigurationManager.isDisabled(discoveredUSBTuner))
-            {
-                discoveredUSBTuner.setEnabled(false);
-                mLog.info("Tuner: " + discoveredUSBTuner + " - Added / Disabled");
-            }
-            else
-            {
-                mLog.info("Tuner: " + discoveredUSBTuner + " - Added / Starting ...");
-                //Attempt to start the discovered tuner and determine the tuner type
-                discoveredUSBTuner.start();
-
-                if(discoveredUSBTuner.hasTuner())
-                {
-                    TunerType tunerType = discoveredUSBTuner.getTuner().getTunerType();
-
-                    TunerConfiguration tunerConfiguration = mTunerConfigurationManager
-                            .getTunerConfiguration(tunerType, discoveredUSBTuner.getId());
-
-                    if(tunerConfiguration != null)
-                    {
-                        mLog.info("Tuner: " + discoveredUSBTuner + " - Applying Tuner Configuration");
-                        discoveredUSBTuner.setTunerConfiguration(tunerConfiguration);
-                        mTunerConfigurationManager.saveConfigurations();
-                    }
-                }
-            }
-
-            mDiscoveredTunerModel.addDiscoveredTuner(discoveredUSBTuner);
+            startAndConfigureTuner(discoveredUSBTuner);
         }
     }
 
@@ -288,10 +258,52 @@ public class TunerManager implements IDiscoveredTunerStatusListener
     }
 
     /**
+     * Starts, configures and adds the tuner to the tuner model.
+     * @param discoveredTuner to add and configure
+     */
+    private void startAndConfigureTuner(DiscoveredTuner discoveredTuner)
+    {
+        discoveredTuner.addTunerStatusListener(this);
+
+        //Set the tuner to disabled if the user has previously blacklisted the tuner
+        if(mTunerConfigurationManager.isDisabled(discoveredTuner))
+        {
+            discoveredTuner.setEnabled(false);
+            mLog.info("Tuner: " + discoveredTuner + " - Added / Disabled");
+        }
+        else
+        {
+            mLog.info("Tuner: " + discoveredTuner + " - Added / Starting ...");
+            //Attempt to start the discovered tuner and determine the tuner type
+            discoveredTuner.start();
+
+            if(discoveredTuner.hasTuner())
+            {
+                TunerType tunerType = discoveredTuner.getTuner().getTunerType();
+
+                TunerConfiguration tunerConfiguration = mTunerConfigurationManager
+                        .getTunerConfiguration(tunerType, discoveredTuner.getId());
+
+                if(tunerConfiguration != null)
+                {
+                    mLog.info("Tuner: " + discoveredTuner + " - Applying Tuner Configuration");
+                    discoveredTuner.setTunerConfiguration(tunerConfiguration);
+                    mTunerConfigurationManager.saveConfigurations();
+                }
+            }
+        }
+
+        mDiscoveredTunerModel.addDiscoveredTuner(discoveredTuner);
+
+    }
+
+    /**
      * Discover SDRPlay RSP tuners
      */
     private void discoverSdrPlayTuners()
     {
+        ChannelizerType channelizerType = mUserPreferences.getTunerPreference().getChannelizerType();
+
         SDRplay sdrplayApi = getSdrplayApi();
 
         if(sdrplayApi.isAvailable())
@@ -303,15 +315,15 @@ public class TunerManager implements IDiscoveredTunerStatusListener
                 //Configure RSPduo to user preference - either single (wide) tuner or dual (narrow) tuners
                 if(deviceDescriptor.getDeviceType() == DeviceType.RSPduo)
                 {
+                    List<DeviceSelectionMode> deviceSelectionModes = deviceDescriptor.getDeviceSelectionModes();
+
+                    mLog.info("SDRPlay Device [" + deviceDescriptor.getDeviceType() +"] Selectable As: " + deviceSelectionModes);
 
                 }
                 else
                 {
-                    mDiscoveredTunerModel.addDiscoveredTuner(new DiscoveredRspTuner(mSdrplayApi, deviceDescriptor));
+                    startAndConfigureTuner(new DiscoveredRspTuner(mSdrplayApi, deviceDescriptor, channelizerType));
                 }
-                List<DeviceSelectionMode> deviceSelectionModes = deviceDescriptor.getDeviceSelectionModes();
-
-                mLog.info("SDRPlay Device [" + deviceDescriptor.getDeviceType() +"] Selectable As: " + deviceSelectionModes);
             }
         }
     }
