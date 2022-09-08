@@ -36,11 +36,10 @@ import io.github.dsheirer.source.tuner.configuration.TunerConfiguration;
 import io.github.dsheirer.source.tuner.frequency.FrequencyController;
 import io.github.dsheirer.source.tuner.frequency.FrequencyController.Tunable;
 import io.github.dsheirer.source.tuner.manager.FrequencyErrorCorrectionManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.text.DecimalFormat;
 import java.util.SortedSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class TunerController implements Tunable, ISourceEventProcessor, ISourceEventListener,
         INativeBufferProvider, Listener<INativeBuffer>, ITunerErrorListener
@@ -336,6 +335,9 @@ public abstract class TunerController implements Tunable, ISourceEventProcessor,
      */
     public int getUsableBandwidth()
     {
+        mLog.info("Bandwidth: " + getBandwidth());
+        mLog.info("Percentage: " + mUsableBandwidthPercentage);
+        mLog.info("Usable bandwidth: " + (int)(getBandwidth() * mUsableBandwidthPercentage));
         return (int)(getBandwidth() * mUsableBandwidthPercentage);
     }
 

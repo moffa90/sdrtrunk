@@ -442,6 +442,8 @@ public class SpectralDisplayPanel extends JPanel
 
             //Fire frequency and sample rate change events so that the spectrum
             //and overlay panels can synchronize
+            mLog.info("**************************8 Firing tuner freq: " + mTuner.getTunerController().getFrequency() +
+                    " sr:" + mTuner.getTunerController().getSampleRate());
             process(SourceEvent.frequencyChange(null, mTuner.getTunerController().getFrequency()));
             process(SourceEvent.sampleRateChange(mTuner.getTunerController().getSampleRate()));
         }

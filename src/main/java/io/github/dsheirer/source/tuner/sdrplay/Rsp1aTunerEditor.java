@@ -80,6 +80,10 @@ public class Rsp1aTunerEditor extends RspTunerEditor<Rsp1aTunerConfiguration>
         add(new JLabel("Sample Rate:"));
         add(getSampleRateCombo(), "wrap");
 
+        add(new JLabel("Gain:"));
+        add(getGainSlider());
+        add(getGainValueLabel());
+
         add(new JSeparator(), "span,growx,push");
 
         add(new JLabel());
@@ -127,6 +131,10 @@ public class Rsp1aTunerEditor extends RspTunerEditor<Rsp1aTunerConfiguration>
         getSampleRateCombo().setEnabled(hasTuner() && !getTuner().getTunerController().isLocked());
         getSampleRateCombo().setSelectedItem(getTunerController().getSampleRateEnumeration());
 
+        getGainSlider().setEnabled(hasTuner());
+        getGainValueLabel().setEnabled(hasTuner());
+        getGainSlider().setValue(hasTuner() ? getTunerController().getGain() : 0);
+
         getBiasTCheckBox().setEnabled(hasTuner());
         try
         {
@@ -173,6 +181,7 @@ public class Rsp1aTunerEditor extends RspTunerEditor<Rsp1aTunerConfiguration>
             getConfiguration().setBiasT(getBiasTCheckBox().isSelected());
             getConfiguration().setRfNotch(getRfNotchCheckBox().isSelected());
             getConfiguration().setRfDabNotch(getRfDabNotchCheckBox().isSelected());
+            getConfiguration().setGain(getGainSlider().getValue());
 
             saveConfiguration();
         }

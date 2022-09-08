@@ -21,6 +21,7 @@ package io.github.dsheirer.source.tuner.sdrplay;
 
 import com.github.dsheirer.sdrplay.SDRplayException;
 import com.github.dsheirer.sdrplay.device.Rsp1aDevice;
+import com.github.dsheirer.sdrplay.parameter.control.AgcMode;
 import com.github.dsheirer.sdrplay.parameter.tuner.SampleRate;
 import io.github.dsheirer.source.SourceException;
 import io.github.dsheirer.source.tuner.ITunerErrorListener;
@@ -84,6 +85,16 @@ public class Rsp1aTunerController extends RspTunerController<Rsp1aDevice>
             catch(SDRplayException se)
             {
                 mLog.error("Error setting RSP1A sample rate to " + rtc.getSampleRate());
+            }
+
+            try
+            {
+                setAgcMode(AgcMode.ENABLE);
+                setGain(rtc.getGain());
+            }
+            catch(SDRplayException se)
+            {
+                mLog.error("Error setting RSP1A gain index to " + rtc.getGain());
             }
 
             try
@@ -154,9 +165,22 @@ public class Rsp1aTunerController extends RspTunerController<Rsp1aDevice>
     {
         getDevice().setSampleRate(sampleRate);
         mSampleRate = sampleRate;
+        try
+        {
+            mFrequencyController.setSampleRate((int)sampleRate.getEffectiveSampleRate());
+        }
+        catch(SourceException se)
+        {
+            mLog.error("Error setting sample rate in frequency controller");
+        }
+
+        mLog.info("Updating for sample rate: " + sampleRate);
+        mLog.info("Sample Rate Bandwidth: " + sampleRate.getBandwidth().getBandwidth());
+        mLog.info("Sample Rate: " + sampleRate.getSampleRate());
+        mLog.info("Usable: " + ((double)sampleRate.getBandwidth().getBandwidth() / (double)sampleRate.getEffectiveSampleRate()));
 
         //Update the usable bandwidth based on the sample rate and filtered bandwidth
-        setUsableBandwidthPercentage(sampleRate.getBandwidth().getBandwidth() / sampleRate.getSampleRate());
+        setUsableBandwidthPercentage((double)sampleRate.getBandwidth().getBandwidth() / (double)sampleRate.getEffectiveSampleRate());
     }
 
     public SampleRate getSampleRateEnumeration()

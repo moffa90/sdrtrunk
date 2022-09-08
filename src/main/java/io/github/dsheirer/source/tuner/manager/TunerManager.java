@@ -294,7 +294,6 @@ public class TunerManager implements IDiscoveredTunerStatusListener
         }
 
         mDiscoveredTunerModel.addDiscoveredTuner(discoveredTuner);
-
     }
 
     /**

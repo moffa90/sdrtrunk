@@ -43,7 +43,8 @@ public class RspTuner extends Tuner
     @Override
     public int getMaximumUSBBitsPerSecond()
     {
-        return 0;
+        //12-bits per sample, 2 samples per frame, 10 MHz sample rate
+        return 320_000_000;
     }
 
     @Override
@@ -61,12 +62,14 @@ public class RspTuner extends Tuner
     @Override
     public String getPreferredName()
     {
-        return null;
+        RspTunerController controller = (RspTunerController)getTunerController();
+
+        return controller.getDevice().getDeviceType() + " SER:" + controller.getDevice().getSerialNumber();
     }
 
     @Override
     public double getSampleSize()
     {
-        return 0;
+        return 9;
     }
 }

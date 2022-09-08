@@ -22,6 +22,7 @@ package io.github.dsheirer.source.tuner.sdrplay;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.github.dsheirer.sdrplay.parameter.tuner.GainReduction;
 import com.github.dsheirer.sdrplay.parameter.tuner.SampleRate;
 import io.github.dsheirer.source.tuner.configuration.TunerConfiguration;
 
@@ -39,6 +40,7 @@ import io.github.dsheirer.source.tuner.configuration.TunerConfiguration;
 public abstract class RspTunerConfiguration extends TunerConfiguration
 {
     private SampleRate mSampleRate = SampleRate.RATE_10_000;
+    private int mGain = 10;
 
     /**
      * JAXB Constructor
@@ -71,5 +73,27 @@ public abstract class RspTunerConfiguration extends TunerConfiguration
     public void setSampleRate(SampleRate sampleRate)
     {
         mSampleRate = sampleRate;
+    }
+
+    /**
+     * Gain index to use
+     * @return gain index, 0 - 28
+     */
+    @JacksonXmlProperty(isAttribute = true, localName = "gain")
+    public int getGain()
+    {
+        return mGain;
+    }
+
+    /**
+     * Sets the gain index
+     * @param gain index, 0 - 28
+     */
+    public void setGain(int gain)
+    {
+        if(GainReduction.MIN_GAIN_INDEX <= gain && gain <= GainReduction.MAX_GAIN_INDEX)
+        {
+            mGain = gain;
+        }
     }
 }
