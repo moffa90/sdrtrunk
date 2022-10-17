@@ -841,7 +841,7 @@ public class P25P1DecoderState extends DecoderState implements IChannelEventList
         if(message.isValid() && message instanceof PDUMessage)
         {
             PDUMessage pdu = (PDUMessage)message;
-
+            mLog.debug(pdu.toString());
             processBroadcast(pdu.getIdentifiers(), message.getTimestamp(), DecodeEventType.DATA_PACKET, pdu.toString());
 
         }
@@ -1052,6 +1052,7 @@ public class P25P1DecoderState extends DecoderState implements IChannelEventList
         if(message.isValid() && message instanceof TSBKMessage)
         {
             TSBKMessage tsbk = (TSBKMessage)message;
+            mLog.debug(tsbk.toString());
 
             switch(tsbk.getOpcode())
             {

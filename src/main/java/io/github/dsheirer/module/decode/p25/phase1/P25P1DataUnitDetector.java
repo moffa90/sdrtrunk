@@ -143,6 +143,9 @@ public class P25P1DataUnitDetector implements Listener<Dibit>, ISyncDetectListen
                 {
                     mPreviousDataUnitId = getDataUnitID(correctedNid);
 
+                    logNID(correctedNid, false);
+                    mLog.debug("NAC from NID: " + getNAC(correctedNid));
+                    mLog.debug("Data Unit ID: " + getDataUnitID(correctedNid) + "\r\n\r\n");
                     mDataUnitDetectListener.dataUnitDetected(mPreviousDataUnitId, getNAC(correctedNid),
                         (bitErrorCount + nidBitErrorCount), (mDibitsProcessed - DATA_UNIT_DIBIT_LENGTH), correctedNid);
                 }

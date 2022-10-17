@@ -41,44 +41,20 @@ import io.github.dsheirer.source.tuner.ui.DiscoveredTunerModel;
 import io.github.dsheirer.spectrum.OverlayPanel.ChannelDisplay;
 import io.github.dsheirer.spectrum.converter.ComplexDecibelConverter;
 import io.github.dsheirer.spectrum.converter.DFTResultsConverter;
-import io.github.dsheirer.spectrum.menu.AveragingItem;
-import io.github.dsheirer.spectrum.menu.DFTSizeItem;
-import io.github.dsheirer.spectrum.menu.FFTWindowTypeItem;
-import io.github.dsheirer.spectrum.menu.FrameRateItem;
-import io.github.dsheirer.spectrum.menu.SmoothingItem;
-import io.github.dsheirer.spectrum.menu.SmoothingTypeItem;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.util.ArrayList;
-import java.util.Hashtable;
+import io.github.dsheirer.spectrum.menu.*;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JSlider;
-import javax.swing.JSplitPane;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
 public class SpectralDisplayPanel extends JPanel
         implements Listener<INativeBuffer>, ISourceEventProcessor, IDFTWidthChangeProcessor
@@ -396,8 +372,8 @@ public class SpectralDisplayPanel extends JPanel
         mDFTConverter = new ComplexDecibelConverter();
         mComplexDftProcessor.addConverter(mDFTConverter);
 
-        mDFTConverter.addListener((DFTResultsListener)mSpectrumPanel);
-        mDFTConverter.addListener((DFTResultsListener)mWaterfallPanel);
+        mDFTConverter.addListener(mSpectrumPanel);
+        mDFTConverter.addListener(mWaterfallPanel);
     }
 
     /**

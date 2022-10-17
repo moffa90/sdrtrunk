@@ -695,6 +695,7 @@ public class SDRTrunk implements Listener<TunerEvent>
                     {
                         add(new ShowTunerMenuItem(mTunerManager.getDiscoveredTunerModel(), discoveredTuner.getTuner()));
                     }
+
                 }
 
                 @Override

@@ -96,6 +96,7 @@ public class MultiSyncPatternMatcher
             if(processor.checkSync(mBits))
             {
                 mBitCount = 0;
+                mLog.debug("Sync mbits: " + Long.toHexString(mBits));
             }
         }
 
@@ -103,7 +104,10 @@ public class MultiSyncPatternMatcher
         {
             mSyncDetectListener.syncLost(mBitCount);
             mBitCount = 0;
+//            mLog.debug("SyncLoss mbits: " + Long.toHexString(mBits));
         }
+
+
     }
 
     /**

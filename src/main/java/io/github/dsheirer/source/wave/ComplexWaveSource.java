@@ -343,6 +343,7 @@ public class ComplexWaveSource extends Source implements IControllableFileSource
         catch(Exception e)
         {
             //Do nothing, we'll return a default of false
+            mLog.debug(e.toString());
         }
 
         return false;

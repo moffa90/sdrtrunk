@@ -177,11 +177,8 @@ public class P25P1MessageFramer implements Listener<Dibit>, IP25P1DataUnitDetect
             //Strip out the status symbol dibit after every 70 bits or 35 dibits
             if(mStatusSymbolDibitCounter == 35)
             {
-                if(mAssemblingMessage)
-                {
-                    //Send status dibit to channel status processor to identify ISP or OSP channel
-                    mChannelStatusProcessor.receive(dibit);
-                }
+                //Send status dibit to channel status processor to identify ISP or OSP channel
+                mChannelStatusProcessor.receive(dibit);
                 mStatusSymbolDibitCounter = 0;
 
                 return;
@@ -207,7 +204,7 @@ public class P25P1MessageFramer implements Listener<Dibit>, IP25P1DataUnitDetect
             }
             catch(BitSetFullException bsfe)
             {
-//                mLog.debug("Message full exception - unexpected");
+                mLog.debug("Message full exception - unexpected");
 
                 //Reset so that we can start over again
                 reset(0);
