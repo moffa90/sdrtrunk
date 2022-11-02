@@ -1,0 +1,101 @@
+/*
+ * *****************************************************************************
+ * Copyright (C) 2014-2022 Dennis Sheirer
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * ****************************************************************************
+ */
+package io.github.cellgain.dsp.filter.channelizer.output;
+
+import io.github.cellgain.sample.Listener;
+import io.github.cellgain.sample.complex.ComplexSamples;
+import io.github.cellgain.util.Dispatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.List;
+
+public abstract class ChannelOutputProcessor implements IPolyphaseChannelOutputProcessor
+{
+    private final static Logger mLog = LoggerFactory.getLogger(ChannelOutputProcessor.class);
+
+    private Dispatcher<List<float[]>> mChannelResultsDispatcher;
+    protected Listener<ComplexSamples> mComplexSamplesListener;
+    private int mInputChannelCount;
+
+    /**
+     * Base class for polyphase channelizer output channel processing.  Provides built-in frequency translation
+     * oscillator support to apply frequency correction to the channel sample stream as requested by sample consumer.
+     *
+     * @param inputChannelCount is the number of input channels for this output processor
+     * @param sampleRate of the output channel.  This is used to match the oscillator's sample rate to the output
+     * channel sample rate for frequency translation/correction.
+     */
+    public ChannelOutputProcessor(int inputChannelCount, double sampleRate)
+    {
+        mInputChannelCount = inputChannelCount;
+        mChannelResultsDispatcher = new Dispatcher<>((int)sampleRate, "sdrapp polyphase channel", Collections.emptyList());
+        mChannelResultsDispatcher.setListener(floats -> process(floats));
+    }
+
+    @Override
+    public void start()
+    {
+        mChannelResultsDispatcher.start();
+    }
+
+    @Override
+    public void stop()
+    {
+        mChannelResultsDispatcher.stop();
+    }
+
+    /**
+     * Registers the listener to receive the assembled complex sample buffers from this processor.
+     */
+    @Override
+    public void setListener(Listener<ComplexSamples> listener)
+    {
+        mComplexSamplesListener = listener;
+    }
+
+    @Override
+    public int getPolyphaseChannelIndexCount()
+    {
+        return mInputChannelCount;
+    }
+
+    public void dispose()
+    {
+    }
+
+    @Override
+    public void receiveChannelResults(List<float[]> channelResultsList)
+    {
+        mChannelResultsDispatcher.receive(channelResultsList);
+    }
+
+    /**
+     * Sub-class implementation to process one polyphase channelizer result array.
+     * @param channelResults to process
+     */
+    public abstract void process(List<float[]> channelResults);
+
+    @Override
+    public int getInputChannelCount()
+    {
+        return mInputChannelCount;
+    }
+}

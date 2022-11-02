@@ -412,7 +412,7 @@ public abstract class AbstractTileFactory extends TileFactory
 			if(url.toString().startsWith("https://tile.openstreetmap.org"))
 			{
 				HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
-				conn.addRequestProperty("User-Agent", "sdrtrunk");
+				conn.addRequestProperty("User-Agent", "sdrapp");
 
 				try
 				{
@@ -475,7 +475,7 @@ public abstract class AbstractTileFactory extends TileFactory
 			System.out.println("Fetching URL: " + url.getClass() + " " + url.toString());
 
 			HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
-			conn.addRequestProperty("User-Agent", "sdrtrunk");
+			conn.addRequestProperty("User-Agent", "sdrapp");
 			InputStream is = conn.getInputStream();
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 

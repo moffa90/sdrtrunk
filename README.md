@@ -11,7 +11,7 @@ A cross-platform java application for decoding, monitoring, recording and stream
 * [Discord Support Channel](https://discord.gg/HJQaKYE)
 
 ![sdrtrunk Application Overview - Version 0.3.0](https://github.com/DSheirer/sdrtrunk/wiki/v0.3/images/ApplicationOverview_V0.3.0.png)
-**Figure 1:** sdrtrunk **Version 0.3.0** Application Screenshot
+**Figure 1:** sdrapp **Version 0.3.0** Application Screenshot
 
 # End User Instructions:
 
@@ -38,7 +38,7 @@ Once unzipped, open a command prompt to where you unzipped the release.  Change 
 ## Optional - P25/DMR Audio
 If you're using sdrtrunk with a P25 or DMR radio system, you'll need to compile and include the [JMBE](https://github.com/DSheirer/sdrtrunk/wiki/JMBE) digital audio library.
 
-In Version 0.5.0 and higher, the SDRTrunk application has support for building the JMBE library.  On the menu, choose **View >> User Preferences** and then click the **Decoder >> JMBE Audio Library** tab.
+In Version 0.5.0 and higher, the SDRApp application has support for building the JMBE library.  On the menu, choose **View >> User Preferences** and then click the **Decoder >> JMBE Audio Library** tab.
 
 For versions prior to Version 0.5.0, the [JMBE](https://github.com/DSheirer/sdrtrunk/wiki/JMBE) wiki page contains instructions for downloading the JMBE audio library source code and compiling the JMBE library.  Once you have compiled the library, launch the sdrtrunk application.  From the menu bar, choose **View >> Preferences**.  In the **JMBE Audio Codec** section, update the path to where your compiled JMBE library is located.  Any channels that are started after you set the path will be able to produce P25 audio.
 

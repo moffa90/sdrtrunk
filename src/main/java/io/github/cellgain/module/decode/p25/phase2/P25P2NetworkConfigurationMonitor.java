@@ -1,0 +1,370 @@
+/*
+ *
+ *  * ******************************************************************************
+ *  * Copyright (C) 2014-2020 Dennis Sheirer
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *  * *****************************************************************************
+ *
+ *
+ */
+
+package io.github.cellgain.module.decode.p25.phase2;
+
+import io.github.cellgain.module.decode.p25.phase1.message.IFrequencyBand;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.MacMessage;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.MacStructure;
+import io.github.cellgain.channel.IChannelDescriptor;
+import io.github.cellgain.identifier.Identifier;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.AdjacentStatusBroadcastAbbreviated;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.AdjacentStatusBroadcastExtended;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.FrequencyBandUpdate;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.FrequencyBandUpdateTDMA;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.FrequencyBandUpdateVUHF;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.NetworkStatusBroadcastAbbreviated;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.NetworkStatusBroadcastExtended;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.RfssStatusBroadcastAbbreviated;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.RfssStatusBroadcastExtended;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.SecondaryControlChannelBroadcastAbbreviated;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.SecondaryControlChannelBroadcastExplicit;
+import io.github.cellgain.module.decode.p25.phase2.message.mac.structure.SystemServiceBroadcast;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+
+/**
+ * Tracks the network configuration details of a P25 Phase 2 network from the broadcast messages
+ */
+public class P25P2NetworkConfigurationMonitor
+{
+    private final static Logger mLog = LoggerFactory.getLogger(P25P2NetworkConfigurationMonitor.class);
+
+    private Map<Integer, IFrequencyBand> mFrequencyBandMap = new HashMap<>();
+
+    //Network Status Messages
+    private NetworkStatusBroadcastAbbreviated mNetworkStatusBroadcastAbbreviated;
+    private NetworkStatusBroadcastExtended mNetworkStatusBroadcastExtended;
+
+    //Current Site Status Messages
+    private RfssStatusBroadcastAbbreviated mRFSSStatusBroadcastAbbreviated;
+    private RfssStatusBroadcastExtended mRFSSStatusBroadcastExtended;
+
+    //Current Site Secondary Control Channels
+    private Map<String,IChannelDescriptor> mSecondaryControlChannels = new TreeMap<>();
+
+    //Current Site Services
+    private SystemServiceBroadcast mSystemServiceBroadcast;
+
+    //Neighbor Sites
+    private Map<Integer,AdjacentStatusBroadcastAbbreviated> mNeighborSitesAbbreviated = new HashMap<>();
+    private Map<Integer,AdjacentStatusBroadcastExtended> mNeighborSitesExtended = new HashMap<>();
+
+    /**
+     * Constructs an instance.
+     */
+    public P25P2NetworkConfigurationMonitor()
+    {
+    }
+
+    /**
+     * Formats the identifier with an appended hexadecimal value when the identifier is an integer
+     * @param identifier to format
+     * @param width of the hex value with zero pre-padding
+     * @return formatted identifier
+     */
+    private String format(Identifier identifier, int width)
+    {
+        if(identifier.getValue() instanceof Integer)
+        {
+            String hex = StringUtils.leftPad(Integer.toHexString((Integer)identifier.getValue()), width, '0');
+
+            return hex.toUpperCase() + "[" + identifier.getValue() + "]";
+        }
+        else
+        {
+            return identifier.toString();
+        }
+    }
+
+    /**
+     * Processes network configuration messages.
+     *
+     * Note: message is expected to be valid (ie message.isValid() = true)
+     */
+    public void processMacMessage(MacMessage message)
+    {
+        MacStructure mac = message.getMacStructure();
+
+        switch((mac.getOpcode()))
+        {
+            case PHASE1_115_IDENTIFIER_UPDATE_TDMA:
+                if(mac instanceof FrequencyBandUpdateTDMA)
+                {
+                    FrequencyBandUpdateTDMA tdma = (FrequencyBandUpdateTDMA)mac;
+                    mFrequencyBandMap.put(tdma.getIdentifier(), tdma);
+                }
+                break;
+            case PHASE1_116_IDENTIFIER_UPDATE_V_UHF:
+                if(mac instanceof FrequencyBandUpdateVUHF)
+                {
+                    FrequencyBandUpdateVUHF vhf = (FrequencyBandUpdateVUHF)mac;
+                    mFrequencyBandMap.put(vhf.getIdentifier(), vhf);
+                }
+                break;
+            case PHASE1_120_SYSTEM_SERVICE_BROADCAST:
+                if(mac instanceof SystemServiceBroadcast)
+                {
+                    mSystemServiceBroadcast = (SystemServiceBroadcast)mac;
+                }
+                break;
+            case PHASE1_121_SECONDARY_CONTROL_CHANNEL_BROADCAST_ABBREVIATED:
+                if(mac instanceof SecondaryControlChannelBroadcastAbbreviated)
+                {
+                    SecondaryControlChannelBroadcastAbbreviated sccba = (SecondaryControlChannelBroadcastAbbreviated)mac;
+
+                    for(IChannelDescriptor channel: sccba.getChannels())
+                    {
+                        mSecondaryControlChannels.put(channel.toString(), channel);
+                    }
+                }
+                break;
+            case PHASE1_122_RFSS_STATUS_BROADCAST_ABBREVIATED:
+                if(mac instanceof RfssStatusBroadcastAbbreviated)
+                {
+                    mRFSSStatusBroadcastAbbreviated = (RfssStatusBroadcastAbbreviated)mac;
+                }
+                break;
+            case PHASE1_123_NETWORK_STATUS_BROADCAST_ABBREVIATED:
+                if(mac instanceof NetworkStatusBroadcastAbbreviated)
+                {
+                    mNetworkStatusBroadcastAbbreviated = (NetworkStatusBroadcastAbbreviated)mac;
+                }
+                break;
+            case PHASE1_124_ADJACENT_STATUS_BROADCAST_ABBREVIATED:
+                if(mac instanceof AdjacentStatusBroadcastAbbreviated)
+                {
+                    AdjacentStatusBroadcastAbbreviated asba = (AdjacentStatusBroadcastAbbreviated)mac;
+                    mNeighborSitesAbbreviated.put((int)asba.getSite().getValue(), asba);
+                }
+                break;
+            case PHASE1_125_IDENTIFIER_UPDATE:
+                if(mac instanceof FrequencyBandUpdate)
+                {
+                    FrequencyBandUpdate band = (FrequencyBandUpdate)mac;
+                    mFrequencyBandMap.put(band.getIdentifier(), band);
+                }
+                break;
+            case PHASE1_233_SECONDARY_CONTROL_CHANNEL_BROADCAST_EXPLICIT:
+                if(mac instanceof SecondaryControlChannelBroadcastExplicit)
+                {
+                    SecondaryControlChannelBroadcastExplicit sccbe = (SecondaryControlChannelBroadcastExplicit)mac;
+
+                    for(IChannelDescriptor channel: sccbe.getChannels())
+                    {
+                        mSecondaryControlChannels.put(channel.toString(), channel);
+                    }
+                }
+                break;
+            case PHASE1_250_RFSS_STATUS_BROADCAST_EXTENDED:
+                if(mac instanceof RfssStatusBroadcastExtended)
+                {
+                    mRFSSStatusBroadcastExtended = (RfssStatusBroadcastExtended)mac;
+                }
+                break;
+            case PHASE1_251_NETWORK_STATUS_BROADCAST_EXTENDED:
+                if(mac instanceof NetworkStatusBroadcastExtended)
+                {
+                    mNetworkStatusBroadcastExtended = (NetworkStatusBroadcastExtended)mac;
+                }
+                break;
+            case PHASE1_252_ADJACENT_STATUS_BROADCAST_EXTENDED:
+                if(mac instanceof AdjacentStatusBroadcastExtended)
+                {
+                    AdjacentStatusBroadcastExtended asbe = (AdjacentStatusBroadcastExtended)mac;
+                    mNeighborSitesExtended.put((int)asbe.getSite().getValue(), asbe);
+                }
+                break;
+        }
+    }
+
+    public void reset()
+    {
+        mFrequencyBandMap.clear();
+        mNetworkStatusBroadcastAbbreviated = null;
+        mNetworkStatusBroadcastExtended = null;
+        mRFSSStatusBroadcastAbbreviated = null;
+        mRFSSStatusBroadcastExtended = null;
+        mSecondaryControlChannels.clear();
+        mSystemServiceBroadcast = null;
+        mNeighborSitesAbbreviated.clear();
+        mNeighborSitesExtended.clear();
+    }
+
+    public String getActivitySummary()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Activity Summary - Decoder:P25 Phase 2");
+
+        sb.append("\n\nNetwork\n");
+        if(mNetworkStatusBroadcastAbbreviated != null)
+        {
+            sb.append("  WACN:").append(format(mNetworkStatusBroadcastAbbreviated.getWACN(), 5));
+            sb.append(" SYSTEM:").append(format(mNetworkStatusBroadcastAbbreviated.getSystem(), 3));
+            sb.append(" NAC:").append(format(mNetworkStatusBroadcastAbbreviated.getNAC(), 3));
+            sb.append(" LRA:").append(format(mNetworkStatusBroadcastAbbreviated.getLRA(), 2));
+        }
+        else if(mNetworkStatusBroadcastExtended != null)
+        {
+            sb.append("  WACN:").append(format(mNetworkStatusBroadcastExtended.getWACN(), 5));
+            sb.append(" SYSTEM:").append(format(mNetworkStatusBroadcastExtended.getSystem(), 3));
+            sb.append(" NAC:").append(format(mNetworkStatusBroadcastExtended.getNAC(), 3));
+            sb.append(" LRA:").append(format(mNetworkStatusBroadcastExtended.getLRA(), 2));
+        }
+        else
+        {
+            sb.append("  UNKNOWN");
+        }
+
+        sb.append("\n\nCurrent Site\n");
+        if(mRFSSStatusBroadcastAbbreviated != null)
+        {
+            sb.append("  SYSTEM:").append(format(mRFSSStatusBroadcastAbbreviated.getSystem(), 3));
+            sb.append(" RFSS:").append(format(mRFSSStatusBroadcastAbbreviated.getRFSS(), 2));
+            sb.append(" SITE:").append(format(mRFSSStatusBroadcastAbbreviated.getSite(), 2));
+            sb.append(" LRA:").append(format(mRFSSStatusBroadcastAbbreviated.getLRA(), 2));
+            sb.append("  PRI CONTROL CHANNEL:").append(mRFSSStatusBroadcastAbbreviated.getChannel());
+            sb.append(" DOWNLINK:").append(mRFSSStatusBroadcastAbbreviated.getChannel().getDownlinkFrequency());
+            sb.append(" UPLINK:").append(mRFSSStatusBroadcastAbbreviated.getChannel().getUplinkFrequency()).append("\n");
+        }
+        else if(mRFSSStatusBroadcastExtended != null)
+        {
+            sb.append("  SYSTEM:").append(format(mRFSSStatusBroadcastExtended.getSystem(), 3));
+            sb.append(" RFSS:").append(format(mRFSSStatusBroadcastExtended.getRFSS(), 2));
+            sb.append(" SITE:").append(format(mRFSSStatusBroadcastExtended.getSite(), 2));
+            sb.append(" LRA:").append(format(mRFSSStatusBroadcastExtended.getLRA(), 2));
+            sb.append("  PRI CONTROL CHANNEL:").append(mRFSSStatusBroadcastExtended.getChannel());
+            sb.append(" DOWNLINK:").append(mRFSSStatusBroadcastExtended.getChannel().getDownlinkFrequency());
+            sb.append(" UPLINK:").append(mRFSSStatusBroadcastExtended.getChannel().getUplinkFrequency()).append("\n");
+        }
+        else
+        {
+            sb.append("  UNKNOWN");
+        }
+
+        if(!mSecondaryControlChannels.isEmpty())
+        {
+            mSecondaryControlChannels.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .filter(Objects::nonNull)
+                    .forEach(entry -> {
+                        sb.append("  SEC CONTROL CHANNEL:").append(entry.getValue());
+                        sb.append(" DOWNLINK:").append(entry.getValue().getDownlinkFrequency());
+                        sb.append(" UPLINK:").append(entry.getValue().getUplinkFrequency()).append("\n");
+                    });
+        }
+
+        if(mSystemServiceBroadcast != null)
+        {
+            sb.append("  AVAILABLE SERVICES:").append(mSystemServiceBroadcast.getAvailableServices());
+            sb.append("  SUPPORTED SERVICES:").append(mSystemServiceBroadcast.getSupportedServices());
+        }
+
+
+        sb.append("\nNeighbor Sites\n");
+        Set<Integer> sites = new TreeSet<>();
+        sites.addAll(mNeighborSitesAbbreviated.keySet());
+        sites.addAll(mNeighborSitesExtended.keySet());
+
+        if(sites.isEmpty())
+        {
+            sb.append("  UNKNOWN");
+        }
+        else
+        {
+            sites.stream()
+                    .sorted()
+                    .forEach(site -> {
+                        if(mNeighborSitesAbbreviated.containsKey(site))
+                        {
+                            AdjacentStatusBroadcastAbbreviated asb = mNeighborSitesAbbreviated.get(site);
+                            sb.append("  SYSTEM:").append(format(asb.getSystem(), 3));
+                            sb.append(" RFSS:").append(format(asb.getRFSS(), 2));
+                            sb.append(" SITE:").append(format(asb.getSite(), 2));
+                            sb.append(" LRA:").append(format(asb.getLRA(), 2));
+                            sb.append(" CHANNEL:").append(asb.getChannel());
+                            sb.append(" DOWNLINK:").append(asb.getChannel().getDownlinkFrequency());
+                            sb.append(" UPLINK:").append(asb.getChannel().getUplinkFrequency());
+                            sb.append(" STATUS:").append(asb.getSiteFlags()).append("\n");
+                        }
+                        else if(mNeighborSitesExtended.containsKey(site))
+                        {
+                            AdjacentStatusBroadcastExtended asb = mNeighborSitesExtended.get(site);
+                            sb.append("  SYSTEM:").append(format(asb.getSystem(), 3));
+                            sb.append(" RFSS:").append(format(asb.getRFSS(), 2));
+                            sb.append(" SITE:").append(format(asb.getSite(), 2));
+                            sb.append(" LRA:").append(format(asb.getLRA(), 2));
+                            sb.append(" CHANNEL:").append(asb.getChannel());
+                            sb.append(" DOWNLINK:").append(asb.getChannel().getDownlinkFrequency());
+                            sb.append(" UPLINK:").append(asb.getChannel().getUplinkFrequency());
+                            sb.append(" STATUS:").append(asb.getSiteFlags()).append("\n");
+                        }
+                        else
+                        {
+                            sb.append(" SITE:").append(site).append(" NOT FOUND IN NEIGHBOR SITE MAPS\n");
+                        }
+                    });
+        }
+
+        sb.append("\nFrequency Bands\n");
+        if(mFrequencyBandMap.isEmpty())
+        {
+            sb.append("  UNKNOWN");
+        }
+        else
+        {
+            mFrequencyBandMap.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> sb.append("  ").append(formatFrequencyBand(entry.getValue())).append("\n"));
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Formats a frequency band
+     */
+    private String formatFrequencyBand(IFrequencyBand band)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("BAND:").append(band.getIdentifier());
+        sb.append(" ").append(band.isTDMA() ? "TDMA" : "FDMA");
+        sb.append(" BASE:").append(band.getBaseFrequency());
+        sb.append(" BANDWIDTH:").append(band.getBandwidth());
+        sb.append(" SPACING:").append(band.getChannelSpacing());
+        sb.append(" TRANSMIT OFFSET:").append(band.getTransmitOffset());
+
+        if(band.isTDMA())
+        {
+            sb.append(" TIMESLOTS:").append(band.getTimeslotCount());
+        }
+
+        return sb.toString();
+    }
+
+}

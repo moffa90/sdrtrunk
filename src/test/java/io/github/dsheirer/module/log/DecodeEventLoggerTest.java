@@ -19,30 +19,24 @@
 
 package io.github.dsheirer.module.log;
 
-import io.github.dsheirer.alias.Alias;
-import io.github.dsheirer.alias.AliasModel;
-import io.github.dsheirer.channel.IChannelDescriptor;
-import io.github.dsheirer.identifier.IdentifierCollection;
-import io.github.dsheirer.identifier.Role;
-import io.github.dsheirer.identifier.configuration.AliasListConfigurationIdentifier;
-import io.github.dsheirer.identifier.configuration.DecoderTypeConfigurationIdentifier;
-import io.github.dsheirer.identifier.configuration.FrequencyConfigurationIdentifier;
-import io.github.dsheirer.module.decode.DecoderType;
-import io.github.dsheirer.module.decode.event.DecodeEvent;
-import io.github.dsheirer.module.decode.event.IDecodeEvent;
-import io.github.dsheirer.module.decode.p25.identifier.channel.APCO25Channel;
-import io.github.dsheirer.module.decode.p25.identifier.talkgroup.APCO25Talkgroup;
-import io.github.dsheirer.protocol.Protocol;
+import io.github.cellgain.alias.AliasModel;
+import io.github.cellgain.channel.IChannelDescriptor;
+import io.github.cellgain.identifier.IdentifierCollection;
+import io.github.cellgain.identifier.Role;
+import io.github.cellgain.identifier.configuration.AliasListConfigurationIdentifier;
+import io.github.cellgain.identifier.configuration.DecoderTypeConfigurationIdentifier;
+import io.github.cellgain.identifier.configuration.FrequencyConfigurationIdentifier;
+import io.github.cellgain.module.decode.DecoderType;
+import io.github.cellgain.module.decode.event.DecodeEvent;
+import io.github.cellgain.module.decode.p25.identifier.channel.APCO25Channel;
+import io.github.cellgain.module.decode.p25.identifier.talkgroup.APCO25Talkgroup;
+import io.github.cellgain.protocol.Protocol;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class DecodeEventLoggerTest {
     IChannelDescriptor channelDescriptor = APCO25Channel.create(98765, 1);

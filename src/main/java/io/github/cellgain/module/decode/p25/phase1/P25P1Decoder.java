@@ -1,0 +1,229 @@
+/*
+ * *****************************************************************************
+ * Copyright (C) 2014-2022 Dennis Sheirer
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * ****************************************************************************
+ */
+package io.github.cellgain.module.decode.p25.phase1;
+
+import io.github.cellgain.dsp.squelch.PowerMonitor;
+import io.github.cellgain.dsp.symbol.Dibit;
+import io.github.cellgain.dsp.symbol.DibitToByteBufferAssembler;
+import io.github.cellgain.module.decode.DecoderType;
+import io.github.cellgain.module.decode.FeedbackDecoder;
+import io.github.cellgain.sample.Broadcaster;
+import io.github.cellgain.sample.Listener;
+import io.github.cellgain.sample.buffer.IByteBufferProvider;
+import io.github.cellgain.sample.complex.ComplexSamples;
+import io.github.cellgain.sample.complex.IComplexSamplesListener;
+import io.github.cellgain.source.ISourceEventListener;
+import io.github.cellgain.source.ISourceEventProvider;
+import io.github.cellgain.source.SourceEvent;
+
+import java.nio.ByteBuffer;
+
+public abstract class P25P1Decoder extends FeedbackDecoder implements ISourceEventListener, ISourceEventProvider,
+        IComplexSamplesListener, Listener<ComplexSamples>, IByteBufferProvider
+{
+    private double mSampleRate;
+    private Broadcaster<Dibit> mDibitBroadcaster = new Broadcaster<>();
+    private DibitToByteBufferAssembler mByteBufferAssembler = new DibitToByteBufferAssembler(300);
+    private P25P1MessageProcessor mMessageProcessor;
+    private Listener<SourceEvent> mSourceEventListener;
+    private double mSymbolRate;
+    protected PowerMonitor mPowerMonitor = new PowerMonitor();
+
+    public P25P1Decoder(double symbolRate)
+    {
+        mSymbolRate = symbolRate;
+        mMessageProcessor = new P25P1MessageProcessor();
+        mMessageProcessor.setMessageListener(getMessageListener());
+        getDibitBroadcaster().addListener(mByteBufferAssembler);
+    }
+
+    @Override
+    public void setSourceEventListener(Listener<SourceEvent> listener )
+    {
+        super.setSourceEventListener(listener);
+        mPowerMonitor.setSourceEventListener(listener);
+    }
+
+    @Override
+    public void removeSourceEventListener()
+    {
+        super.removeSourceEventListener();
+        mPowerMonitor.setSourceEventListener(null);
+    }
+
+    /**
+     * Assembler for packaging Dibit stream into reusable byte buffers.
+     */
+    protected Broadcaster<Dibit> getDibitBroadcaster()
+    {
+        return mDibitBroadcaster;
+    }
+
+    /**
+     * Implements the IByteBufferProvider interface - delegates to the byte buffer assembler
+     */
+    @Override
+    public void setBufferListener(Listener<ByteBuffer> listener)
+    {
+        mByteBufferAssembler.setBufferListener(listener);
+    }
+
+    /**
+     * Implements the IByteBufferProvider interface - delegates to the byte buffer assembler
+     */
+    @Override
+    public void removeBufferListener(Listener<ByteBuffer> listener)
+    {
+        mByteBufferAssembler.removeBufferListener(listener);
+    }
+
+    /**
+     * Implements the IByteBufferProvider interface - delegates to the byte buffer assembler
+     */
+    @Override
+    public boolean hasBufferListeners()
+    {
+        return mByteBufferAssembler.hasBufferListeners();
+    }
+
+    protected double getSymbolRate()
+    {
+        return mSymbolRate;
+    }
+
+    /**
+     * Current sample rate for this decoder
+     */
+    protected double getSampleRate()
+    {
+        return mSampleRate;
+    }
+
+    /**
+     * Sets current sample rate for this decoder
+     */
+    public void setSampleRate(double sampleRate)
+    {
+        if(sampleRate <= getSymbolRate() * 2)
+        {
+            throw new IllegalArgumentException("Sample rate [" + sampleRate + "] must be >9600 (2 * " +
+                getSymbolRate() + " symbol rate)");
+        }
+
+        mPowerMonitor.setSampleRate((int)sampleRate);
+        mSampleRate = sampleRate;
+    }
+
+    /**
+     * Samples per symbol based on current sample rate and symbol rate.
+     */
+    public float getSamplesPerSymbol()
+    {
+        return (float)(getSampleRate() / getSymbolRate());
+    }
+
+    @Override
+    public Listener<SourceEvent> getSourceEventListener()
+    {
+        return new Listener<SourceEvent>()
+        {
+            @Override
+            public void receive(SourceEvent sourceEvent)
+            {
+                process(sourceEvent);
+            }
+        };
+    }
+
+    /**
+     * Sub-class processing of received source events
+     * @param sourceEvent
+     */
+    protected abstract void process(SourceEvent sourceEvent);
+
+    /**
+     * Listener interface to receive reusable complex buffers
+     */
+    @Override
+    public Listener<ComplexSamples> getComplexSamplesListener()
+    {
+        return P25P1Decoder.this;
+    }
+
+    /**
+     * Starts the decoder
+     */
+    @Override
+    public void start()
+    {
+        //No-op
+    }
+
+    /**
+     * Stops the decoder
+     */
+    @Override
+    public void stop()
+    {
+        //No-op
+    }
+
+    @Override
+    public DecoderType getDecoderType()
+    {
+        return DecoderType.P25_PHASE1;
+    }
+
+    protected P25P1MessageProcessor getMessageProcessor()
+    {
+        return mMessageProcessor;
+    }
+
+    public abstract Modulation getModulation();
+
+    public enum Modulation
+    {
+        CQPSK("Simulcast (LSM)", "LSM"),
+        C4FM("Normal (C4FM)", "C4FM");
+
+        private String mLabel;
+        private String mShortLabel;
+
+        private Modulation(String label, String shortLabel)
+        {
+            mLabel = label;
+            mShortLabel = shortLabel;
+        }
+
+        public String getLabel()
+        {
+            return mLabel;
+        }
+
+        public String getShortLabel()
+        {
+            return mShortLabel;
+        }
+
+        public String toString()
+        {
+            return getLabel();
+        }
+    }
+}

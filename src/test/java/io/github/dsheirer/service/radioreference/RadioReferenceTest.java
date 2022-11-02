@@ -1,5 +1,6 @@
 package io.github.dsheirer.service.radioreference;
 
+import io.github.cellgain.service.radioreference.RadioReference;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -7,7 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import static io.github.dsheirer.service.radioreference.RadioReference.CheckExpDate;
+import static io.github.cellgain.service.radioreference.RadioReference.CheckExpDate;
 
 public class RadioReferenceTest
 {

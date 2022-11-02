@@ -98,7 +98,7 @@ tasks.withType(JavaCompile) {
 }
 
 application {
-    mainClassName = "io.github.dsheirer.gui.SDRTrunk"
+    mainClassName = "io.github.cellgain.gui.SDRApp"
     applicationDefaultJvmArgs =
         ['--add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED', //Needed for controls-fx.jar
          '--add-modules=jdk.incubator.vector',   //Needed while Panama Vector API remains in incubator
@@ -108,7 +108,7 @@ application {
 jar {
     manifest {
         attributes (
-                'Implementation-Title'  : 'sdrtrunk project',
+                'Implementation-Title'  : 'sdrapp project',
                 'Implementation-Version' : archiveVersion,
                 'Created-By'            : "Gradle ${gradle.gradleVersion}",
                 'Build-Timestamp'       : new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
