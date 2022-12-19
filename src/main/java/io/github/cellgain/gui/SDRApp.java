@@ -61,6 +61,7 @@ import io.github.cellgain.util.TimeStamp;
 import io.github.cellgain.vector.calibrate.CalibrationManager;
 import javafx.application.Platform;
 import javafx.scene.control.ButtonType;
+import javafx.scene.paint.Color;
 import jiconfont.icons.font_awesome.FontAwesome;
 import jiconfont.swing.IconFontSwing;
 import net.miginfocom.swing.MigLayout;
@@ -134,6 +135,7 @@ public class SDRApp implements Listener<TunerEvent>
         if(!GraphicsEnvironment.isHeadless())
         {
             mMainGui = new JFrame();
+            mMainGui.setIconImage(IconModel.getScaledIcon("images/icon.png", 32).getImage());
         }
 
         mApplicationLog = new ApplicationLog(mUserPreferences);
